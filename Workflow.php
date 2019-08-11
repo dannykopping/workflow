@@ -38,13 +38,15 @@ class Workflow implements WorkflowInterface
     private $markingStore;
     private $dispatcher;
     private $name;
+    private $skipAnnouncement;
 
-    public function __construct(Definition $definition, MarkingStoreInterface $markingStore = null, EventDispatcherInterface $dispatcher = null, string $name = 'unnamed')
+    public function __construct(Definition $definition, MarkingStoreInterface $markingStore = null, EventDispatcherInterface $dispatcher = null, string $name = 'unnamed', bool $skipAnnouncement = false)
     {
         $this->definition = $definition;
         $this->markingStore = $markingStore ?: new MultipleStateMarkingStore();
         $this->dispatcher = null !== $dispatcher ? LegacyEventDispatcherProxy::decorate($dispatcher) : null;
         $this->name = $name;
+        $this->skipAnnouncement = $skipAnnouncement;
     }
 
     /**
@@ -186,7 +188,9 @@ class Workflow implements WorkflowInterface
 
             $this->completed($subject, $transition, $marking);
 
-            $this->announce($subject, $transition, $marking);
+            if(!$this->skipAnnouncement) {
+                $this->announce($subject, $transition, $marking);
+            }
         }
 
         if (!$transitionBlockerList) {
